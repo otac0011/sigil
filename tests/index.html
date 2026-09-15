@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sigil tests</title>
+  <style>
+    body { margin: 0; padding: 16px; background: #16130f; color: #e9e2d3; font: 14px/1.5 ui-monospace, Consolas, monospace; }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    .pass { color: #9fd49f; }
+    .fail { color: #f08c7c; }
+    .detail { color: #b8ae9d; margin-left: 1.5em; }
+  </style>
+</head>
+<body>
+  <h1>Sigil tests</h1>
+  <div id="summary">running&hellip;</div>
+  <ol id="out"></ol>
+  <script type="module">
+    import * as T from '../js/math/torus.js';
+    import { createLayout, N_U, N_V, RING_AVENUES_DEG } from '../js/gen/layout.js';
+    import { createTaskHandler } from '../js/gen/tasks.js';
+    import { mulberry32 } from '../js/math/rng.js';
+
+    const data = await fetch('../data/sigil.json').then((r) => r.json());
+    const L = createLayout(data, { farT: 60 });
+    const rng = mulberry32(42);
+    const rnd = (a, b) => a + (b - a) * rng();
+    const results = [];
+    const near = (a, b, eps) => Math.abs(a - b) <= eps;
+    const v3near = (a, b, eps) => a.every((x, i) => near(x, b[i], eps));
+
+    async function test(name, fn) {
+      try {
+        const res = await fn();
+        results.push({ name, pass: res === true || !!(res && res.pass), detail: (res && res.detail) || '' });
+      } catch (e) {
+        results.push({ name, pass: false, detail: String((e && e.stack) || e) });
+      }
+    }
+
+    await test('chart forward/inverse round-trip on 10k random (u, v) < 1e-9', () => {
+      const c = T.makeChart({ width: 360, height: 300, u0: 0.7 });
+      let worst = 0;
+      for (let k = 0; k < 10000; k++) {
+        const u = rnd(0, T.TAU), v = rnd(-T.VMAX, T.VMAX);
+        const [x, y] = T.chartForward(c, u, v), back = T.chartInverse(c, x, y);
+        const du = Math.abs(T.wrapU(back.u - u + Math.PI) - Math.PI);
+        worst = Math.max(worst, du, Math.abs(back.v - v));
+      }
+      return { pass: worst < 1e-9, detail: `worst ${worst.toExponential(2)}` };
+    });
+
+    await test('chart rejects clicks outside the band', () => {
+      const c = T.makeChart({ width: 360, height: 300 });
+      return T.chartInverse(c, c.cx, c.cy) === null
+        && T.chartInverse(c, c.cx, c.cy - c.rin * 0.9) === null
+        && T.chartInverse(c, c.cx, c.cy - c.rout * 1.05) === null
+        && T.chartInverse(c, c.cx, c.cy - (c.rin + c.rout) / 2) !== null;
+    });
+
+    await test('(e_u, e_v, n) orthonormal, right-handed, and tangent to the surface', () => {
+      let worst = 0;
+      for (let k = 0; k < 1000; k++) {
+        const u = rnd(0, T.TAU), v = rnd(-T.VMAX, T.VMAX);
+        const eu = T.eUAt(u), ev = T.eVAt(u, v), n = T.upAt(u, v), cr = T.cross(eu, ev);
+        const h = 1e-6, p0 = T.surface(u, v), pu = T.surface(u + h, v), pv = T.surface(u, v + h);
+        const du = T.norm([pu[0] - p0[0], pu[1] - p0[1], pu[2] - p0[2]]), dv = T.norm([pv[0] - p0[0], pv[1] - p0[1], pv[2] - p0[2]]);
+        worst = Math.max(worst, Math.abs(T.dot(eu, eu) - 1), Math.abs(T.dot(ev, ev) - 1), Math.abs(T.dot(n, n) - 1),
+          Math.abs(T.dot(eu, ev)), Math.abs(T.dot(eu, n)), Math.abs(T.dot(ev, n)),
+          ...cr.map((x, i) => Math.abs(x - n[i])), ...du.map((x, i) => Math.abs(x - eu[i]) * 1e-3), ...dv.map((x, i) => Math.abs(x - ev[i]) * 1e-3));
+      }
+      return { pass: worst < 1e-6, detail: `worst ${worst.toExponential(2)}` };
+    });
+
+    await test('up points at the tube centre line (inner face)', () => {
+      const u = 1.1, v = 0.4, p = T.surface(u, v), n = T.upAt(u, v), c = [T.R * Math.cos(u), 0, T.R * Math.sin(u)];
+      const toC = T.norm([c[0] - p[0], c[1] - p[1], c[2] - p[2]]);
+      return v3near(n, toC, 1e-9);
+    });
+
+    await test('camera basis orthonormal and right-handed at theta = 0, +-89 deg', () => {
+      let worst = 0;
+      for (const theta of [0, 89 * T.DEG, -89 * T.DEG, 45 * T.DEG]) {
+        for (let k = 0; k < 200; k++) {
+          const s = { u: rnd(0, T.TAU), v: rnd(-T.VMAX, T.VMAX), psi: rnd(-4, 4), theta, h: 1.7 };
+          const b = T.viewBasis(s), xy = T.cross(b.X, b.Y);
+          worst = Math.max(worst, Math.abs(T.dot(b.X, b.Y)), Math.abs(T.dot(b.X, b.Z)), Math.abs(T.dot(b.Y, b.Z)),
+            Math.abs(T.dot(b.X, b.X) - 1), Math.abs(T.dot(b.Y, b.Y) - 1), ...xy.map((x, i) => Math.abs(x - b.Z[i])));
+          if (theta === 0) worst = Math.max(worst, ...b.Y.map((x, i) => Math.abs(x - b.n[i])));
+        }
+      }
+      return { pass: worst < 1e-9, detail: `worst ${worst.toExponential(2)}` };
+    });
+
+    await test('chart is not mirrored (+v is on your left in 3D and left of clockwise travel on the map)', () => {
+      const c = T.makeChart({ width: 360, height: 300, u0: 0.3 });
+      for (let k = 0; k < 500; k++) {
+        const u = rnd(0, T.TAU), v = rnd(-T.VMAX * 0.9, T.VMAX * 0.9);
+        const b = T.viewBasis({ u, v, psi: 0, theta: 0, h: 1.7 });
+        const left3d = b.X.map((x) => -x);
+        if (T.dot(left3d, T.eVAt(u, v)) <= 0) return { pass: false, detail: '3D left is not +e_v' };
+        const h = 1e-5, p = T.chartForward(c, u, v), pu = T.chartForward(c, u + h, v), pv = T.chartForward(c, u, v + h);
+        const tr = [pu[0] - p[0], pu[1] - p[1]], leftScreen = [tr[1], -tr[0]], dv = [pv[0] - p[0], pv[1] - p[1]];
+        if (leftScreen[0] * dv[0] + leftScreen[1] * dv[1] <= 0) return { pass: false, detail: `map mirrored at u=${u.toFixed(3)}` };
+      }
+      return true;
+    });
+
+    await test('wards run clockwise in canon order', () => {
+      const expected = ['ladys', 'lower', 'hive', 'clerks', 'guildhall', 'market'];
+      const got = L.wards.map((w) => L.wards[L.wardIndexAt((w.u0 + w.u1) / 2, 0.2)].id);
+      return { pass: JSON.stringify(got) === JSON.stringify(expected), detail: got.join(' → ') };
+    });
+
+    await test('every landmark lies in its own ward', () => {
+      const bad = L.landmarks.filter((lm) => L.wards[L.wardIndexAt(lm.u, lm.v)].id !== lm.ward).map((lm) => lm.id);
+      return { pass: bad.length === 0, detail: bad.join(', ') };
+    });
+
+    await test('viewpoints stand in the plaza, clear of the landmark, facing it', () => {
+      const bad = [];
+      for (const lm of L.landmarks) {
+        const vp = L.viewpointOf(lm), d = T.chordDist(vp.u, vp.v, lm.u, lm.v);
+        const face = Math.abs(T.wrapU(vp.psi - T.headingTo(vp.u, vp.v, lm.u, lm.v) + Math.PI) - Math.PI);
+        if (d > lm.plaza - 4 || face > 1e-6 || Math.abs(vp.v) > T.VMAX) bad.push(`${lm.id} d=${d.toFixed(1)}`);
+      }
+      return { pass: bad.length === 0, detail: bad.join(', ') };
+    });
+
+    await test('no lot inside a plaza or across a viewpoint sightline', () => {
+      const bad = [];
+      for (const lm of L.landmarks) {
+        const lots = L.obstaclesNear(lm.u, lm.v, lm.plaza + 80), vp = L.viewpointOf(lm);
+        for (const lot of lots) if (T.chordDist(lot.u, lot.v, lm.u, lm.v) < lm.plaza) bad.push(`${lm.id}: lot in plaza`);
+        const d = T.chordDist(vp.u, vp.v, lm.u, lm.v);
+        for (let s = 0; s <= 24; s++) {
+          const [su, sv] = T.walk(vp.u, vp.v, vp.psi, (d * s) / 24);
+          if (lots.some((lot) => L.insideLot(lot, su, sv, 0))) { bad.push(`${lm.id}: sightline blocked`); break; }
+        }
+      }
+      return { pass: bad.length === 0, detail: [...new Set(bad)].join(', ') };
+    });
+
+    await test('lots never overlap each other or a ring avenue (chunk 17,5 and 70,9)', () => {
+      const bad = [];
+      for (const [i, j] of [[17, 5], [70, 9]]) {
+        const lots = L.lotsInChunk(i, j);
+        for (let a = 0; a < lots.length; a++) {
+          const A = lots[a];
+          for (const av of RING_AVENUES_DEG) {
+            const va = av * T.DEG, half = (av === 0 ? 22 : Math.abs(av) === 38 ? 14 : 12) / 2 / T.r - 1e-9;
+            if (A.v1 > va - half && A.v0 < va + half) bad.push(`lot crosses avenue ${av}`);
+          }
+          for (let b = a + 1; b < lots.length; b++) {
+            const B = lots[b], du = T.wrapU(B.u0 - A.u0 + Math.PI) - Math.PI;
+            const overlapU = du < A.u1 - A.u0 - 1e-9 && du + (B.u1 - B.u0) > 1e-9;
+            const overlapV = B.v0 < A.v1 - 1e-9 && B.v1 > A.v0 + 1e-9;
+            if (overlapU && overlapV) bad.push(`overlap in chunk ${i},${j}`);
+          }
+        }
+        if (!lots.length) bad.push(`chunk ${i},${j} empty`);
+      }
+      return { pass: bad.length === 0, detail: [...new Set(bad)].slice(0, 5).join(', ') };
+    });
+
+    await test('far-node chunk membership is a partition (sectors 0, 40, 127)', () => {
+      for (const i of [0, 40, 127]) {
+        let sum = 0;
+        for (let j = 0; j < N_V; j++) sum += L.farNodesInChunk(i, j).length;
+        if (sum !== L.farNodesInSector(i).length) return { pass: false, detail: `sector ${i}: ${sum} vs ${L.farNodesInSector(i).length}` };
+      }
+      return true;
+    });
+
+    await test('generation is deterministic: two handlers and a module worker agree', async () => {
+      const a = createTaskHandler(), b = createTaskHandler();
+      a({ type: 'init', data, farT: 60 }); b({ type: 'init', data, farT: 60 });
+      const ha = a({ type: 'hash', i: 17, j: 5 }).result, hb = b({ type: 'hash', i: 17, j: 5 }).result;
+      const w = new Worker(new URL('../js/gen/worker.js', import.meta.url), { type: 'module' });
+      const call = (id, msg) => new Promise((res, rej) => {
+        w.onmessage = (e) => (e.data.error ? rej(new Error(e.data.error)) : res(e.data.result));
+        w.onerror = (e) => rej(new Error(e.message));
+        w.postMessage({ id, msg });
+      });
+      await call(1, { type: 'init', data, farT: 60 });
+      const hw = await call(2, { type: 'hash', i: 17, j: 5 });
+      w.terminate();
+      const same = ha.near === hb.near && ha.far === hb.far && ha.near === hw.near && ha.far === hw.far;
+      return { pass: same, detail: `near ${ha.near}/${hw.near} far ${ha.far}/${hw.far}` };
+    });
+
+    await test('street snapping finds open ground in the dense Hive', () => {
+      const hive = L.wards.find((w) => w.id === 'hive');
+      const bad = [];
+      for (let k = 0; k < 6; k++) {
+        const u = rnd(hive.u0 + 0.05, hive.u1 - 0.05), v = rnd(-1.2, 1.2), sp = L.findStandpoint(u, v);
+        if (L.blockedAt(sp.u, sp.v, L.obstaclesNear(sp.u, sp.v, 60), 0)) bad.push(`(${u.toFixed(3)}, ${v.toFixed(3)})`);
+      }
+      return { pass: bad.length === 0, detail: bad.join(', ') };
+    });
+
+    const out = document.getElementById('out');
+    for (const r of results) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="${r.pass ? 'pass' : 'fail'}">${r.pass ? 'PASS' : 'FAIL'}</span> ${r.name}${r.detail ? `<div class="detail">${r.detail}</div>` : ''}`;
+      out.appendChild(li);
+    }
+    const failed = results.filter((r) => !r.pass).length;
+    document.getElementById('summary').innerHTML = `<span class="${failed ? 'fail' : 'pass'}">${results.length - failed}/${results.length} passed</span>`;
+    window.__tests = { done: true, passed: results.length - failed, failed, results };
+  </script>
+</body>
+</html>

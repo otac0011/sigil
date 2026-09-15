@@ -1,0 +1,122 @@
+{
+  "generatorVersion": 1,
+  "seed": 1187,
+  "wards": [
+    {
+      "id": "ladys", "name": "The Lady's Ward", "share": 0.20, "style": "ladys",
+      "ground": "#7a7480", "tint": "#b7b0c8", "fog": "#a39cb0", "nearAmt": 0.10,
+      "blurb": "Sigil's high ground in every sense but altitude: courts, temples and fortified mansions, where the law keeps its offices and the wealthy keep their guards."
+    },
+    {
+      "id": "lower", "name": "The Lower Ward", "share": 0.17, "style": "lower",
+      "ground": "#65574a", "tint": "#b0834f", "fog": "#a6835a", "nearAmt": 0.34,
+      "blurb": "Forges, foundries and portal-smoke. The air tastes of brimstone and hot iron, and too many of the doorways here open somewhere warmer than you'd like."
+    },
+    {
+      "id": "hive", "name": "The Hive", "share": 0.25, "style": "hive",
+      "ground": "#56504a", "tint": "#8a7d68", "fog": "#857c6c", "nearAmt": 0.30,
+      "blurb": "A maze of leaning tenements and crooked lanes where the city's poor, lost and hunted wash up. Shacks go up and come down so fast that any map of it ages in a week."
+    },
+    {
+      "id": "clerks", "name": "The Clerk's Ward", "share": 0.15, "style": "clerks",
+      "ground": "#6c7074", "tint": "#9fa9b3", "fog": "#949ba4", "nearAmt": 0.14,
+      "blurb": "Orderly streets of scribes, archives and prosperous guildsfolk. If something in Sigil was written down, stamped or taxed, the paperwork lives here."
+    },
+    {
+      "id": "guildhall", "name": "The Guildhall Ward", "share": 0.12, "style": "guildhall",
+      "ground": "#6d655b", "tint": "#b09a80", "fog": "#9d9283", "nearAmt": 0.18,
+      "blurb": "Workshops and rowhouses around the city's guild halls: artisans, tradesfolk, and everyone else who actually keeps the Cage running."
+    },
+    {
+      "id": "market", "name": "The Market Ward", "share": 0.11, "style": "market",
+      "ground": "#72685a", "tint": "#c2a472", "fog": "#a89574", "nearAmt": 0.20,
+      "blurb": "Stalls, awnings and hawkers selling anything from anywhere. Prices are negotiable; where the goods came from is not discussed."
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "city-court", "name": "City Court", "ward": "ladys", "f": 0.45, "vDeg": 4,
+      "archetype": "court", "footprint": 48, "plaza": 100,
+      "view": { "dist": 88, "bearingDeg": 180, "h": 1.7, "thetaDeg": 11 },
+      "blurb": "The seat of Sigil's law, its bladed facade looming over the plaza. The Guvners who run it prize correct procedure far above mercy."
+    },
+    {
+      "id": "prison", "name": "The Prison", "ward": "ladys", "f": 0.2, "vDeg": -48,
+      "archetype": "prison", "footprint": 52, "plaza": 95,
+      "view": { "dist": 82, "bearingDeg": 90, "h": 1.7, "thetaDeg": 13 },
+      "blurb": "A walled fortress of cells and spiked towers held by the Mercykillers, who believe punishment is its own justification."
+    },
+    {
+      "id": "armory", "name": "The Armory", "ward": "ladys", "f": 0.76, "vDeg": 52,
+      "archetype": "armory", "footprint": 46, "plaza": 88,
+      "view": { "dist": 76, "bearingDeg": 205, "h": 1.7, "thetaDeg": 15 },
+      "blurb": "Fortress, arsenal and home of the Doomguard, who stockpile weapons and welcome the slow decay of everything."
+    },
+    {
+      "id": "city-barracks", "name": "City Barracks", "ward": "ladys", "f": 0.62, "vDeg": -60,
+      "archetype": "barracks", "footprint": 62, "plaza": 100,
+      "view": { "dist": 90, "bearingDeg": 30, "h": 1.7, "thetaDeg": 9 },
+      "blurb": "Headquarters of the Harmonium, the city's self-appointed watch, drilling in the yard at every peak."
+    },
+    {
+      "id": "great-foundry", "name": "The Great Foundry", "ward": "lower", "f": 0.45, "vDeg": -20,
+      "archetype": "foundry", "footprint": 82, "plaza": 125,
+      "view": { "dist": 115, "bearingDeg": 250, "h": 1.7, "thetaDeg": 13 },
+      "blurb": "Chimneys pour smoke into the Lower Ward day and night. The Godsmen who run it hold that every soul is being refined, like ore."
+    },
+    {
+      "id": "shattered-temple", "name": "The Shattered Temple", "ward": "lower", "f": 0.12, "vDeg": 34,
+      "archetype": "ruin", "footprint": 42, "plaza": 82,
+      "view": { "dist": 66, "bearingDeg": 160, "h": 1.7, "thetaDeg": 9 },
+      "blurb": "The broken shell of a dead god's temple, now kept by the Athar, who insist the gods were never what they claimed."
+    },
+    {
+      "id": "mortuary", "name": "The Mortuary", "ward": "hive", "f": 0.35, "vDeg": 30,
+      "archetype": "mortuary", "footprint": 46, "plaza": 88,
+      "view": { "dist": 74, "bearingDeg": 0, "h": 1.7, "thetaDeg": 14 },
+      "blurb": "A black-walled house of the dead where the Dustmen tend corpses and talk softly of the True Death."
+    },
+    {
+      "id": "gatehouse", "name": "The Gatehouse", "ward": "hive", "f": 0.7, "vDeg": -36,
+      "archetype": "gatehouse", "footprint": 36, "plaza": 76,
+      "view": { "dist": 62, "bearingDeg": 120, "h": 1.7, "thetaDeg": 24 },
+      "blurb": "Asylum and soup kitchen of the Bleak Cabal, sheltering those the multiverse has driven mad."
+    },
+    {
+      "id": "smoldering-corpse", "name": "The Smoldering Corpse Bar", "ward": "hive", "f": 0.18, "vDeg": -8,
+      "archetype": "tavern", "footprint": 14, "plaza": 42,
+      "view": { "dist": 32, "bearingDeg": 90, "h": 1.7, "thetaDeg": 6 },
+      "blurb": "A cramped, smoky Hive tavern with a reputation for rough customers and rougher drink."
+    },
+    {
+      "id": "hall-of-records", "name": "The Hall of Records", "ward": "clerks", "f": 0.42, "vDeg": -24,
+      "archetype": "records", "footprint": 56, "plaza": 96,
+      "view": { "dist": 86, "bearingDeg": 180, "h": 1.7, "thetaDeg": 10 },
+      "blurb": "The city's archive and tax office, run by the Fated, who see no reason information, or anything else, should be free."
+    },
+    {
+      "id": "civic-festhall", "name": "The Civic Festhall", "ward": "clerks", "f": 0.72, "vDeg": 30,
+      "archetype": "festhall", "footprint": 56, "plaza": 100,
+      "view": { "dist": 92, "bearingDeg": 270, "h": 1.7, "thetaDeg": 15 },
+      "blurb": "Part theatre, part museum, part pleasure-house: the Society of Sensation's palace, where experience itself is the art."
+    },
+    {
+      "id": "hall-of-speakers", "name": "The Hall of Speakers", "ward": "clerks", "f": 0.18, "vDeg": 46,
+      "archetype": "speakers", "footprint": 46, "plaza": 86,
+      "view": { "dist": 76, "bearingDeg": 45, "h": 1.7, "thetaDeg": 12 },
+      "blurb": "The domed council hall where the factions argue in public session, and occasionally agree."
+    },
+    {
+      "id": "great-gymnasium", "name": "The Great Gymnasium", "ward": "guildhall", "f": 0.5, "vDeg": 2,
+      "archetype": "gymnasium", "footprint": 60, "plaza": 100,
+      "view": { "dist": 92, "bearingDeg": 90, "h": 1.7, "thetaDeg": 9 },
+      "blurb": "Baths, courts and training halls. The Transcendent Order practise here, trying to act before they think."
+    },
+    {
+      "id": "great-bazaar", "name": "The Great Bazaar", "ward": "market", "f": 0.5, "vDeg": -6,
+      "archetype": "bazaar", "footprint": 92, "plaza": 104,
+      "view": { "dist": 26, "bearingDeg": 200, "h": 1.7, "thetaDeg": 10 },
+      "blurb": "The largest open market in the multiverse, or so every vendor in it will tell you."
+    }
+  ]
+}
