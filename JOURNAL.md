@@ -242,3 +242,56 @@ not the FPS overlay, when the preview isn't visible.
 
 A real bug found at the same time: `#progress { display: flex }` overrode the `hidden` attribute, so
 "Raising the far side" never disappeared. Fixed globally with `[hidden] { display: none !important; }`.
+
+---
+
+## 2026-09-14 — The "black sun": haze as the light source, lamplight through smog
+
+**Context** — First screenshots showed a large dark disc above City Court, and looking straight up showed
+a dark strip. Toggling layers ruled out smoke, far boxes and ground individually. A red background showed
+only corner patches, so it was not the void. Green fog turned the disc fully green, so it was heavily
+fogged geometry. With `?fog=0` it stayed dark brown.
+
+**Finding** — The geometry was correct. The disc is the Hive, directly across the ring from Lady's Ward
+(u + π), seen through the gap in our own tube and framed by our rims. Its dark palette next to pale
+Lady's Ward stone, under a fog colour darker than lit surfaces, made the distant city read as a hole.
+
+**Decision** — Treat the haze as the light source (canon: an all-pervasive light and no sky).
+- Fog colour = ward tint × (0.42 + 0.78·brightness), always brighter than stone lit at ambient
+  0.22 + 0.7·brightness. The background (the void past the rims) is 8 % brighter again.
+- kFar raised from 1.2e-4 to 1.5e-4.
+- Window and emissive light is added after fog with 0.4× the extinction (`glow · exp(-0.4·kFar·d)`), so
+  at antipeak the far side becomes a field of lamps overhead.
+- Windows got mullions and per-window brightness variation. Smoke was lightened so plumes read against
+  the haze.
+
+**Alternatives rejected**
+- *Recolour or brighten the Hive* — only fixes it from Lady's Ward; any dark ward opposite a light one
+  repeats the problem.
+- *A painted "sky" behind the gap* — Sigil has no sky; the gap must show the far side of the city.
+- *Less fog* — the far side becomes a sharp, shimmering carpet of sub-pixel boxes instead of a hazy city.
+
+**Verification** — From City Court: looking up shows a glowing gap with the far side as a hazy band, and
+the forward disc is now a light haze. Antipeak look-up: a lit city curving overhead. Great Foundry: smoke
+plumes visible from the chimneys.
+
+**Open / revisit** — The bird's-eye band-edge view reads flat in heavy ward smog; a height-dependent smog
+term might help.
+
+---
+
+## 2026-09-14 — Deploy to GitHub Pages
+
+**Decision** — Public repo `otac0011/sigil`, Pages with a legacy build from `main` root, enabled with
+`gh api -X POST repos/otac0011/sigil/pages -f source[branch]=main -f source[path]=/`. `.nojekyll` so
+Jekyll never processes the files.
+
+**Alternatives rejected** — *Actions workflow deploy* (nothing to build); *`gh-pages` branch* (a second
+branch to keep in sync for no benefit).
+
+**Verification** — Build `built` with no error. On https://otac0011.github.io/sigil/ every module, data
+and worker request returned 200, with no console errors and `__sigil.ready` at 1.7 s; the City Court view
+matched local. Mobile emulation (375×812): no horizontal scroll, mini-map 208 px wide, caption wraps
+to 144 px.
+
+**Open / revisit** — README has no screenshots yet; the tooling here can't save browser captures to disk.

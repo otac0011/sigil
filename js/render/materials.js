@@ -75,18 +75,21 @@ void main() {
   vec3 gc = vGrit * 0.7;
   float grit = mix(1.0, 0.9 + 0.2 * hash13(floor(gc)), 1.0 - smoothstep(0.3, 0.9, length(fwidth(gc))));
   vec3 col = base * grit * uAmbient;
+  vec3 glow = emissive * mix(0.55, 1.0, uWindow);
   if (vWin.y >= 0.0) {
     vec2 c = vWin / vec2(3.2, 3.6);
     vec2 fc = fract(c);
     vec2 fw = fwidth(c);
     float aa = 1.0 - smoothstep(0.2, 0.55, max(fw.x, fw.y));
-    float w = step(0.3, fc.x) * step(fc.x, 0.7) * step(0.28, fc.y) * step(fc.y, 0.72);
-    float lit = step(0.58, hash12(floor(c)));
+    float w = step(0.32, fc.x) * step(fc.x, 0.68) * step(0.28, fc.y) * step(fc.y, 0.72);
+    float bars = max(step(abs(fc.x - 0.5), 0.022), step(abs(fc.y - 0.5), 0.02));
+    float h = hash12(floor(c));
+    float lit = step(0.58, h) * (1.0 - bars);
     col *= mix(1.0, 1.0 - 0.3 * w, aa);
-    col += uWindowColor * uWindow * mix(0.074, w * lit, aa);
+    glow += uWindowColor * (0.55 + 0.45 * fract(h * 7.13)) * uWindow * mix(0.04, w * lit * 0.8, aa);
   }
-  col += emissive * mix(0.55, 1.0, uWindow);
-  gl_FragColor = vec4(applyFog(col, vDepth), 1.0);
+  // Lamplight carries further through the smog than lit stone does.
+  gl_FragColor = vec4(applyFog(col, vDepth) + glow * exp(-vDepth * uFogK * 0.4), 1.0);
 }
 `;
 
@@ -127,8 +130,8 @@ varying float vSide;
 varying float vSeed;
 void main() {
   #include <logdepthbuf_fragment>
-  vec3 col = vCol * uAmbient + uWindowColor * uWindow * vSide * (0.04 + 0.1 * vSeed);
-  gl_FragColor = vec4(applyFog(col, vDepth), 1.0);
+  vec3 glow = uWindowColor * uWindow * vSide * (0.03 + 0.08 * vSeed);
+  gl_FragColor = vec4(applyFog(vCol * uAmbient, vDepth) + glow * exp(-vDepth * uFogK * 0.4), 1.0);
 }
 `;
 
